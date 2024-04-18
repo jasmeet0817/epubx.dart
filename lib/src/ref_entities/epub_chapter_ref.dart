@@ -27,8 +27,6 @@ class EpubChapterRef {
     var objects = [
       Title.hashCode,
       ContentFileName.hashCode,
-      Anchor.hashCode,
-      epubTextContentFileRef.hashCode,
       OtherContentFileNames.hashCode,
       Anchor.hashCode,
       epubTextContentFileRef.hashCode,
@@ -45,8 +43,6 @@ class EpubChapterRef {
     }
     return Title == other.Title &&
         ContentFileName == other.ContentFileName &&
-        Anchor == other.Anchor &&
-        epubTextContentFileRef == other.epubTextContentFileRef &&
         OtherContentFileNames == other.OtherContentFileNames &&
         Anchor == other.Anchor &&
         epubTextContentFileRef == other.epubTextContentFileRef &&
@@ -55,7 +51,6 @@ class EpubChapterRef {
   }
 
   Future<String> readHtmlContent() async {
-    return epubTextContentFileRef!.readContentAsText();
     var contentFuture = epubTextContentFileRef!.readContentAsText();
     if (OtherContentFileNames.isNotEmpty) {
       var allContentFutures = <Future<String>>[contentFuture];
