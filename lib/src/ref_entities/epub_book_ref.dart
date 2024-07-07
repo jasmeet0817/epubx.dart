@@ -35,6 +35,14 @@ class EpubBookRef {
     return hashObjects(objects);
   }
 
+  int get deterministicHash {
+    var objects = [
+      Title.hashCode,
+      Author.hashCode,
+    ];
+    return hashObjects(objects);
+  }
+
   @override
   bool operator ==(other) {
     if (!(other is EpubBookRef)) {
