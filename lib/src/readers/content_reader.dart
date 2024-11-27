@@ -1,3 +1,5 @@
+import 'package:epubx/src/utils/file_name_decoder.dart';
+
 import '../entities/epub_content_type.dart';
 import '../ref_entities/epub_book_ref.dart';
 import '../ref_entities/epub_byte_content_file_ref.dart';
@@ -30,7 +32,7 @@ class ContentReader {
         case EpubContentType.DTBOOK_NCX:
           var epubTextContentFile = EpubTextContentFileRef(bookRef);
           {
-            epubTextContentFile.FileName = Uri.decodeFull(fileName!);
+            epubTextContentFile.FileName = decodeFileName(fileName!);
             epubTextContentFile.ContentMimeType = contentMimeType;
             epubTextContentFile.ContentType = contentType;
           }
@@ -51,6 +53,7 @@ class ContentReader {
             case EpubContentType.IMAGE_JPEG:
             case EpubContentType.IMAGE_PNG:
             case EpubContentType.IMAGE_SVG:
+            case EpubContentType.IMAGE_BMP:
             case EpubContentType.FONT_TRUETYPE:
             case EpubContentType.FONT_OPENTYPE:
             case EpubContentType.OTHER:
@@ -61,7 +64,7 @@ class ContentReader {
         default:
           var epubByteContentFile = EpubByteContentFileRef(bookRef);
           {
-            epubByteContentFile.FileName = Uri.decodeFull(fileName!);
+            epubByteContentFile.FileName = decodeFileName(fileName!);
             epubByteContentFile.ContentMimeType = contentMimeType;
             epubByteContentFile.ContentType = contentType;
           }
@@ -71,6 +74,7 @@ class ContentReader {
             case EpubContentType.IMAGE_JPEG:
             case EpubContentType.IMAGE_PNG:
             case EpubContentType.IMAGE_SVG:
+            case EpubContentType.IMAGE_BMP:
               result.Images![fileName] = epubByteContentFile;
               break;
             case EpubContentType.FONT_TRUETYPE:
@@ -98,6 +102,7 @@ class ContentReader {
       String contentMimeType) {
     switch (contentMimeType.toLowerCase()) {
       case 'application/xhtml+xml':
+      case 'text/html':
         return EpubContentType.XHTML_1_1;
       case 'application/x-dtbook+xml':
         return EpubContentType.DTBOOK;
@@ -119,6 +124,8 @@ class ContentReader {
         return EpubContentType.IMAGE_PNG;
       case 'image/svg+xml':
         return EpubContentType.IMAGE_SVG;
+      case 'image/bmp':
+        return EpubContentType.IMAGE_BMP;
       case 'font/truetype':
         return EpubContentType.FONT_TRUETYPE;
       case 'font/opentype':
