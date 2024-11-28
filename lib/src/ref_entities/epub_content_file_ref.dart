@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:archive/archive.dart';
 import 'package:collection/collection.dart' show IterableExtension;
+import 'package:epubx/src/utils/image_compressor.dart';
 import 'package:quiver/core.dart';
 
 import '../entities/epub_content_type.dart';
@@ -54,18 +55,19 @@ abstract class EpubContentFileRef {
   }
 
   List<int> openContentStream(ArchiveFile contentFileEntry) {
-    var contentStream = <int>[];
     if (contentFileEntry.content == null) {
       throw Exception(
           'Incorrect EPUB file: content file \"$FileName\" specified in manifest is not found.');
     }
-    contentStream.addAll(contentFileEntry.content);
-    return contentStream;
+    return contentFileEntry.content;
   }
 
-  Future<Uint8List> readContentAsBytes() async {
+  Future<Uint8List> readContentAsBytes(bool isImage) async {
     var contentFileEntry = getContentFileEntry();
     var content = openContentStream(contentFileEntry);
+    if (isImage) {
+      return compressImage(content);
+    }
     return Uint8List.fromList(content);
   }
 

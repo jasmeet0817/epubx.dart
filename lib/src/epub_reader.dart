@@ -1,22 +1,14 @@
 import 'dart:async';
 
 import 'package:archive/archive.dart';
+import 'package:epubx/epubx.dart';
 
-import 'entities/epub_book.dart';
-import 'entities/epub_byte_content_file.dart';
-import 'entities/epub_chapter.dart';
-import 'entities/epub_content.dart';
-import 'entities/epub_content_file.dart';
-import 'entities/epub_text_content_file.dart';
 import 'readers/content_reader.dart';
 import 'readers/schema_reader.dart';
-import 'ref_entities/epub_book_ref.dart';
 import 'ref_entities/epub_byte_content_file_ref.dart';
-import 'ref_entities/epub_chapter_ref.dart';
 import 'ref_entities/epub_content_file_ref.dart';
 import 'ref_entities/epub_content_ref.dart';
 import 'ref_entities/epub_text_content_file_ref.dart';
-import 'schema/opf/epub_metadata_creator.dart';
 
 /// A class that provides the primary interface to read Epub files.
 ///
@@ -159,7 +151,15 @@ class EpubReader {
     result.FileName = contentFileRef.FileName;
     result.ContentType = contentFileRef.ContentType;
     result.ContentMimeType = contentFileRef.ContentMimeType;
-    result.Content = await contentFileRef.readContentAsBytes();
+
+    var isImage = [
+      EpubContentType.IMAGE_JPEG,
+      EpubContentType.IMAGE_PNG,
+      EpubContentType.IMAGE_GIF,
+      EpubContentType.IMAGE_BMP,
+      EpubContentType.IMAGE_SVG
+    ].contains(result.ContentType);
+    result.Content = await contentFileRef.readContentAsBytes(isImage);
 
     return result;
   }
