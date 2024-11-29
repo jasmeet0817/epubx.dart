@@ -22,6 +22,10 @@ class CachedEpubByteContentFile extends EpubContentFile {
     }
   }
 
+  static Future<void> invalidateCache() {
+    return _cacheManager.emptyCache();
+  }
+
   late int hashCodeValue;
 
   CachedEpubByteContentFile.fromJson(Map<String, dynamic> json) {

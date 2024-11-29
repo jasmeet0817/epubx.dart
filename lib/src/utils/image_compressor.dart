@@ -7,7 +7,7 @@ Future<Uint8List> compressImage(List<int> originalImageData) async {
   try {
     return await FlutterImageCompress.compressWithList(
       Uint8List.fromList(originalImageData),
-      quality: 12,
+      quality: 50,
       minWidth: 400,
       minHeight: 400,
     );
