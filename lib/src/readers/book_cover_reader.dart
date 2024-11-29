@@ -16,23 +16,41 @@ class BookCoverReader {
   static Future<images.Image?> readBookCover(EpubBookRef bookRef) async {
     var metaItems = bookRef.Schema!.Package!.Metadata!.MetaItems;
     if (metaItems == null || metaItems.isEmpty) return null;
-
     var coverMetaItem = metaItems.firstWhereOrNull(
         (EpubMetadataMeta metaItem) =>
             metaItem.Name != null && metaItem.Name!.toLowerCase() == 'cover');
-    if (coverMetaItem == null) return null;
-    if (coverMetaItem.Content == null || coverMetaItem.Content!.isEmpty) {
-      logger.e('Incorrect EPUB metadata: cover item content is missing.');
-      return null;
+    var coverManifestId;
+    var coverManifestSearchId = 'cover';
+    if (coverMetaItem != null &&
+        coverMetaItem.Content != null &&
+        coverMetaItem.Content!.isNotEmpty) {
+      coverManifestId = coverMetaItem.Content!.toLowerCase();
+    } else {
+      logger.e('Cover id is not in manifest.');
     }
-
-    var coverManifestItem = bookRef.Schema!.Package!.Manifest!.Items!
-        .firstWhereOrNull((EpubManifestItem manifestItem) =>
-            manifestItem.Id!.toLowerCase() ==
-            coverMetaItem.Content!.toLowerCase());
+    var coverManifestItem;
+    if (coverManifestId != null) {
+      coverManifestItem = bookRef.Schema!.Package!.Manifest!.Items!
+          .firstWhereOrNull((EpubManifestItem manifestItem) =>
+              manifestItem.Id!.toLowerCase() == coverManifestId);
+    }
+    // If manifest item with cover id is not found, search for item with text "cover" in id
+    if (coverManifestItem == null) {
+      var coverManifestItems = bookRef.Schema!.Package!.Manifest!.Items!
+          .where((EpubManifestItem manifestItem) =>
+              manifestItem.Id!.toLowerCase().contains(coverManifestSearchId))
+          .toList();
+      if (coverManifestItems.length == 1) {
+        coverManifestItem = coverManifestItems.first;
+      } else {
+        coverManifestItem = coverManifestItems.firstWhereOrNull(
+            (EpubManifestItem manifestItem) =>
+                manifestItem.MediaType?.contains('image') ?? false);
+      }
+    }
     if (coverManifestItem == null) {
       logger.e(
-          'Incorrect EPUB manifest: item with ID = \"${coverMetaItem.Content}\" is missing.');
+          'Incorrect EPUB manifest: item with ID = \"$coverManifestId\" is missing.');
       return null;
     }
 
