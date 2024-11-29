@@ -161,9 +161,10 @@ class NavigationReader {
       }
       //Get relative toc file path
       if (_tocFileEntryPath!.contains('/')) {
-        _tocFileEntryPath = ((_tocFileEntryPath!.split('/')..removeLast())
-                // ..removeAt(0)
-                )
+        _tocFileEntryPath = ((_tocFileEntryPath!
+                    .replaceFirst(contentDirectoryPath, '')
+                    .split('/')
+                  ..removeLast()))
                 .join('/') +
             '/';
       } else {
