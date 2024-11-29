@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:archive/archive.dart';
 import 'package:epubx/epubx.dart';
+import 'package:epubx/src/entities/cached_epub_byte_content_file.dart';
 
 import 'readers/content_reader.dart';
 import 'readers/schema_reader.dart';
@@ -91,8 +92,10 @@ class EpubReader {
     var result = EpubContent();
     result.Html = await readTextContentFiles(contentRef.Html!);
     result.Css = await readTextContentFiles(contentRef.Css!);
-    result.Images = await readByteContentFiles(contentRef.Images!);
-    result.Fonts = await readByteContentFiles(contentRef.Fonts!);
+    result.Images = castMap<String, EpubContentFile, CachedEpubByteContentFile>(
+        await readByteContentFiles(contentRef.Images!, true));
+    result.Fonts = castMap<String, EpubContentFile, EpubByteContentFile>(
+        await readByteContentFiles(contentRef.Fonts!, false));
     result.AllFiles = <String, EpubContentFile>{};
 
     result.Html!.forEach((String? key, EpubTextContentFile value) {
@@ -102,7 +105,7 @@ class EpubReader {
       result.AllFiles![key!] = value;
     });
 
-    result.Images!.forEach((String? key, EpubByteContentFile value) {
+    result.Images!.forEach((String? key, CachedEpubByteContentFile value) {
       result.AllFiles![key!] = value;
     });
     result.Fonts!.forEach((String? key, EpubByteContentFile value) {
@@ -135,11 +138,17 @@ class EpubReader {
     return result;
   }
 
-  static Future<Map<String, EpubByteContentFile>> readByteContentFiles(
-      Map<String, EpubByteContentFileRef> byteContentFileRefs) async {
-    var result = <String, EpubByteContentFile>{};
+  static Future<Map<String, EpubContentFile>> readByteContentFiles(
+      Map<String, EpubByteContentFileRef> byteContentFileRefs,
+      bool cacheFile) async {
+    var result = <String, EpubContentFile>{};
     await Future.forEach(byteContentFileRefs.keys, (dynamic key) async {
-      result[key] = await readByteContentFile(byteContentFileRefs[key]!);
+      if (cacheFile) {
+        result[key] =
+            await readAndCacheByteContentFile(byteContentFileRefs[key]!);
+      } else {
+        result[key] = await readByteContentFile(byteContentFileRefs[key]!);
+      }
     });
     return result;
   }
@@ -151,17 +160,15 @@ class EpubReader {
     result.FileName = contentFileRef.FileName;
     result.ContentType = contentFileRef.ContentType;
     result.ContentMimeType = contentFileRef.ContentMimeType;
-
-    var isImage = [
-      EpubContentType.IMAGE_JPEG,
-      EpubContentType.IMAGE_PNG,
-      EpubContentType.IMAGE_GIF,
-      EpubContentType.IMAGE_BMP,
-      EpubContentType.IMAGE_SVG
-    ].contains(result.ContentType);
-    result.Content = await contentFileRef.readContentAsBytes(isImage);
+    result.Content = await contentFileRef.readContentAsBytes(false);
 
     return result;
+  }
+
+  static Future<CachedEpubByteContentFile> readAndCacheByteContentFile(
+      EpubContentFileRef contentFileRef) async {
+    var byteFile = await readByteContentFile(contentFileRef);
+    return CachedEpubByteContentFile(byteFile);
   }
 
   static Future<List<EpubChapter>> readChapters(
@@ -180,4 +187,8 @@ class EpubReader {
     });
     return result;
   }
+}
+
+Map<K, R> castMap<K, V, R>(Map<K, V> input) {
+  return input.map((key, value) => MapEntry(key, value as R));
 }
