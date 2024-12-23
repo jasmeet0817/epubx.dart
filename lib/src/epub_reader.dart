@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:archive/archive.dart';
 import 'package:epubx/epubx.dart';
+import 'package:epubx/src/ref_entities/book_size.dart';
 
 import 'readers/content_reader.dart';
 import 'readers/schema_reader.dart';
@@ -74,12 +75,13 @@ class EpubReader {
       loadedBytes = bytes;
     }
 
+    final bookSize = BookSize.fromByteLength(loadedBytes.length);
     var epubBookRef = await openBook(loadedBytes);
     result.Schema = epubBookRef.Schema;
     result.Title = epubBookRef.Title;
     result.AuthorList = epubBookRef.AuthorList;
     result.Author = epubBookRef.Author;
-    result.Content = await readContent(epubBookRef.Content!);
+    result.Content = await readContent(epubBookRef.Content!, bookSize);
     result.CoverImage = await epubBookRef.readCover();
     var chapterRefs = await epubBookRef.getChapters();
     result.Chapters = await readChapters(chapterRefs);
@@ -87,12 +89,19 @@ class EpubReader {
     return result;
   }
 
-  static Future<EpubContent> readContent(EpubContentRef contentRef) async {
+  static Future<EpubContent> readContent(
+      EpubContentRef contentRef, BookSize bookSize) async {
     var result = EpubContent();
     result.Html = await readTextContentFiles(contentRef.Html!);
     result.Css = await readTextContentFiles(contentRef.Css!);
-    result.Images = await readByteContentFiles(contentRef.Images!);
-    result.Fonts = await readByteContentFiles(contentRef.Fonts!);
+    if (bookSize == BookSize.EXTREMELY_LARGE) {
+      result.Images = <String, EpubByteContentFile>{};
+    } else {
+      result.Images = await readByteContentFiles(contentRef.Images!,
+          imageCompressionRate: bookSize.getImageCompressionRate());
+    }
+    result.Fonts = await readByteContentFiles(contentRef.Fonts!,
+        imageCompressionRate: bookSize.getImageCompressionRate());
     result.AllFiles = <String, EpubContentFile>{};
 
     result.Html!.forEach((String? key, EpubTextContentFile value) {
@@ -111,8 +120,9 @@ class EpubReader {
 
     await Future.forEach(contentRef.AllFiles!.keys, (dynamic key) async {
       if (!result.AllFiles!.containsKey(key)) {
-        result.AllFiles![key] =
-            await readByteContentFile(contentRef.AllFiles![key]!);
+        result.AllFiles![key] = await readByteContentFile(
+            contentRef.AllFiles![key]!,
+            imageCompressionRate: bookSize.getImageCompressionRate());
       }
     });
 
@@ -136,16 +146,19 @@ class EpubReader {
   }
 
   static Future<Map<String, EpubByteContentFile>> readByteContentFiles(
-      Map<String, EpubByteContentFileRef> byteContentFileRefs) async {
+      Map<String, EpubByteContentFileRef> byteContentFileRefs,
+      {int imageCompressionRate = 25}) async {
     var result = <String, EpubByteContentFile>{};
     await Future.forEach(byteContentFileRefs.keys, (dynamic key) async {
-      result[key] = await readByteContentFile(byteContentFileRefs[key]!);
+      result[key] = await readByteContentFile(byteContentFileRefs[key]!,
+          imageCompressionRate: imageCompressionRate);
     });
     return result;
   }
 
   static Future<EpubByteContentFile> readByteContentFile(
-      EpubContentFileRef contentFileRef) async {
+      EpubContentFileRef contentFileRef,
+      {int imageCompressionRate = 25}) async {
     var result = EpubByteContentFile();
 
     result.FileName = contentFileRef.FileName;
@@ -159,7 +172,10 @@ class EpubReader {
       EpubContentType.IMAGE_BMP,
       EpubContentType.IMAGE_SVG
     ].contains(result.ContentType);
-    result.Content = await contentFileRef.readContentAsBytes(isImage);
+    result.Content = await contentFileRef.readContentAsBytes(
+      isImage,
+      imageCompressionRate: imageCompressionRate,
+    );
 
     return result;
   }

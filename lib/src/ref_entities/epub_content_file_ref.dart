@@ -62,11 +62,12 @@ abstract class EpubContentFileRef {
     return contentFileEntry.content;
   }
 
-  Future<Uint8List> readContentAsBytes(bool isImage) async {
+  Future<Uint8List> readContentAsBytes(bool isImage,
+      {int imageCompressionRate = 25}) async {
     var contentFileEntry = getContentFileEntry();
     var content = openContentStream(contentFileEntry);
     if (isImage) {
-      return compressImage(content);
+      return compressImage(content, imageCompressionRate);
     }
     return Uint8List.fromList(content);
   }

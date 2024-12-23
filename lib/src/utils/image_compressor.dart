@@ -3,11 +3,12 @@ import 'dart:typed_data';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:logger/logger.dart';
 
-Future<Uint8List> compressImage(List<int> originalImageData) async {
+Future<Uint8List> compressImage(
+    List<int> originalImageData, int imageCompressionRate) async {
   try {
     return await FlutterImageCompress.compressWithList(
       Uint8List.fromList(originalImageData),
-      quality: 25,
+      quality: imageCompressionRate,
       minWidth: 400,
       minHeight: 400,
     );
