@@ -20,6 +20,8 @@ enum BookSize {
     }
   }
 
+  get isTooLarge => this == BookSize.EXTREMELY_LARGE;
+
   int getImageCompressionRate() {
     switch (this) {
       case BookSize.EXTREMELY_LARGE:
