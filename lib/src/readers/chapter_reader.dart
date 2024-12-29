@@ -1,3 +1,5 @@
+import 'package:epubx/src/utils/file_name_decoder.dart';
+
 import '../ref_entities/epub_book_ref.dart';
 import '../ref_entities/epub_chapter_ref.dart';
 import '../ref_entities/epub_text_content_file_ref.dart';
@@ -39,7 +41,7 @@ class ChapterReader {
         anchor = navigationPoint.Content!.Source!
             .substring(contentSourceAnchorCharIndex + 1);
       }
-      contentFileName = Uri.decodeFull(contentFileName!);
+      contentFileName = decodeFileName(contentFileName!);
       EpubTextContentFileRef? htmlContentFileRef;
       if (!bookRef.Content!.Html!.containsKey(contentFileName)) {
         throw Exception(
