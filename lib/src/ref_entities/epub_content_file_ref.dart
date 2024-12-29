@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:archive/archive.dart';
 import 'package:collection/collection.dart' show IterableExtension;
+import 'package:epubx/src/ref_entities/file_not_found_exception.dart';
 import 'package:epubx/src/utils/image_compressor.dart';
 import 'package:quiver/core.dart';
 
@@ -44,7 +45,7 @@ abstract class EpubContentFileRef {
         .files
         .firstWhereOrNull((ArchiveFile x) => x.name == contentFilePath);
     if (contentFileEntry == null) {
-      throw Exception(
+      throw FileNotFoundException(
           'EPUB parsing error: file $contentFilePath not found in archive.');
     }
     return contentFileEntry;

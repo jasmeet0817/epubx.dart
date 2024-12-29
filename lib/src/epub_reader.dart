@@ -120,9 +120,13 @@ class EpubReader {
 
     await Future.forEach(contentRef.AllFiles!.keys, (dynamic key) async {
       if (!result.AllFiles!.containsKey(key)) {
-        result.AllFiles![key] = await readByteContentFile(
-            contentRef.AllFiles![key]!,
-            imageCompressionRate: bookSize.getImageCompressionRate());
+        try {
+          result.AllFiles![key] = await readByteContentFile(
+              contentRef.AllFiles![key]!,
+              imageCompressionRate: bookSize.getImageCompressionRate());
+        } catch (FileNotFoundException) {
+          // Do nothing, let the file be missing.
+        }
       }
     });
 
@@ -150,8 +154,12 @@ class EpubReader {
       {int imageCompressionRate = 25}) async {
     var result = <String, EpubByteContentFile>{};
     await Future.forEach(byteContentFileRefs.keys, (dynamic key) async {
-      result[key] = await readByteContentFile(byteContentFileRefs[key]!,
-          imageCompressionRate: imageCompressionRate);
+      try {
+        result[key] = await readByteContentFile(byteContentFileRefs[key]!,
+            imageCompressionRate: imageCompressionRate);
+      } catch (FileNotFoundException) {
+        // Do nothing, let the file be missing.
+      }
     });
     return result;
   }
