@@ -6,7 +6,6 @@ export 'src/epub_reader.dart';
 export 'src/epub_writer.dart';
 export 'src/ref_entities/epub_book_ref.dart';
 export 'src/ref_entities/epub_chapter_ref.dart';
-export 'src/ref_entities/book_size.dart';
 export 'src/entities/epub_book.dart';
 export 'src/entities/epub_chapter.dart';
 export 'src/entities/epub_content.dart';

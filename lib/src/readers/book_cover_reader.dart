@@ -64,7 +64,7 @@ class BookCoverReader {
     coverImageContentFileRef = bookRef.Content!.Images![coverManifestItem.Href];
     try {
       var coverImageContent =
-          await coverImageContentFileRef!.readContentAsBytes(true);
+          await coverImageContentFileRef!.readContentAsBytes();
       var retval = images.decodeImage(Uint8List.fromList(coverImageContent));
       return retval;
     } catch (e) {

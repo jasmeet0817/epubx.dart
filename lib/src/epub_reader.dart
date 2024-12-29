@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:archive/archive.dart';
 import 'package:epubx/epubx.dart';
-import 'package:epubx/src/ref_entities/book_size.dart';
 
 import 'readers/content_reader.dart';
 import 'readers/schema_reader.dart';
@@ -75,13 +74,12 @@ class EpubReader {
       loadedBytes = bytes;
     }
 
-    final bookSize = BookSize.fromByteLength(loadedBytes.length);
     var epubBookRef = await openBook(loadedBytes);
     result.Schema = epubBookRef.Schema;
     result.Title = epubBookRef.Title;
     result.AuthorList = epubBookRef.AuthorList;
     result.Author = epubBookRef.Author;
-    result.Content = await readContent(epubBookRef.Content!, bookSize);
+    result.Content = await readContent(epubBookRef.Content!);
     result.CoverImage = await epubBookRef.readCover();
     var chapterRefs = await epubBookRef.getChapters();
     result.Chapters = await readChapters(chapterRefs);
@@ -89,19 +87,12 @@ class EpubReader {
     return result;
   }
 
-  static Future<EpubContent> readContent(
-      EpubContentRef contentRef, BookSize bookSize) async {
+  static Future<EpubContent> readContent(EpubContentRef contentRef) async {
     var result = EpubContent();
     result.Html = await readTextContentFiles(contentRef.Html!);
     result.Css = await readTextContentFiles(contentRef.Css!);
-    if (bookSize == BookSize.EXTREMELY_LARGE) {
-      result.Images = <String, EpubByteContentFile>{};
-    } else {
-      result.Images = await readByteContentFiles(contentRef.Images!,
-          imageCompressionRate: bookSize.getImageCompressionRate());
-    }
-    result.Fonts = await readByteContentFiles(contentRef.Fonts!,
-        imageCompressionRate: bookSize.getImageCompressionRate());
+    result.Images = await readByteContentFiles(contentRef.Images!);
+    result.Fonts = await readByteContentFiles(contentRef.Fonts!);
     result.AllFiles = <String, EpubContentFile>{};
 
     result.Html!.forEach((String? key, EpubTextContentFile value) {
@@ -121,9 +112,8 @@ class EpubReader {
     await Future.forEach(contentRef.AllFiles!.keys, (dynamic key) async {
       if (!result.AllFiles!.containsKey(key)) {
         try {
-          result.AllFiles![key] = await readByteContentFile(
-              contentRef.AllFiles![key]!,
-              imageCompressionRate: bookSize.getImageCompressionRate());
+          result.AllFiles![key] =
+              await readByteContentFile(contentRef.AllFiles![key]!);
         } catch (FileNotFoundException) {
           // Do nothing, let the file be missing.
         }
@@ -150,13 +140,11 @@ class EpubReader {
   }
 
   static Future<Map<String, EpubByteContentFile>> readByteContentFiles(
-      Map<String, EpubByteContentFileRef> byteContentFileRefs,
-      {int imageCompressionRate = 25}) async {
+      Map<String, EpubByteContentFileRef> byteContentFileRefs) async {
     var result = <String, EpubByteContentFile>{};
     await Future.forEach(byteContentFileRefs.keys, (dynamic key) async {
       try {
-        result[key] = await readByteContentFile(byteContentFileRefs[key]!,
-            imageCompressionRate: imageCompressionRate);
+        result[key] = await readByteContentFile(byteContentFileRefs[key]!);
       } catch (FileNotFoundException) {
         // Do nothing, let the file be missing.
       }
@@ -165,25 +153,13 @@ class EpubReader {
   }
 
   static Future<EpubByteContentFile> readByteContentFile(
-      EpubContentFileRef contentFileRef,
-      {int imageCompressionRate = 25}) async {
+      EpubContentFileRef contentFileRef) async {
     var result = EpubByteContentFile();
 
     result.FileName = contentFileRef.FileName;
     result.ContentType = contentFileRef.ContentType;
     result.ContentMimeType = contentFileRef.ContentMimeType;
-
-    var isImage = [
-      EpubContentType.IMAGE_JPEG,
-      EpubContentType.IMAGE_PNG,
-      EpubContentType.IMAGE_GIF,
-      EpubContentType.IMAGE_BMP,
-      EpubContentType.IMAGE_SVG
-    ].contains(result.ContentType);
-    result.Content = await contentFileRef.readContentAsBytes(
-      isImage,
-      imageCompressionRate: imageCompressionRate,
-    );
+    result.Content = await contentFileRef.readContentAsBytes();
 
     return result;
   }

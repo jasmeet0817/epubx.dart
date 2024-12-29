@@ -5,7 +5,6 @@ import 'dart:typed_data';
 import 'package:archive/archive.dart';
 import 'package:collection/collection.dart' show IterableExtension;
 import 'package:epubx/src/ref_entities/file_not_found_exception.dart';
-import 'package:epubx/src/utils/image_compressor.dart';
 import 'package:quiver/core.dart';
 
 import '../entities/epub_content_type.dart';
@@ -63,13 +62,9 @@ abstract class EpubContentFileRef {
     return contentFileEntry.content;
   }
 
-  Future<Uint8List> readContentAsBytes(bool isImage,
-      {int imageCompressionRate = 25}) async {
+  Future<Uint8List> readContentAsBytes() async {
     var contentFileEntry = getContentFileEntry();
     var content = openContentStream(contentFileEntry);
-    if (isImage) {
-      return compressImage(content, imageCompressionRate);
-    }
     return Uint8List.fromList(content);
   }
 
