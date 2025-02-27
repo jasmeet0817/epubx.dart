@@ -1,7 +1,7 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:archive/archive.dart';
-import 'package:image/image.dart';
 import 'package:quiver/collection.dart' as collections;
 import 'package:quiver/core.dart';
 
@@ -56,7 +56,7 @@ class EpubBookRef {
     return ChapterReader.getChapters(this);
   }
 
-  Future<Image?> readCover() async {
+  Future<Uint8List?> readCover() async {
     return await BookCoverReader.readBookCover(this);
   }
 }

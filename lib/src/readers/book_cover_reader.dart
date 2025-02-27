@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:collection/collection.dart' show IterableExtension;
-import 'package:image/image.dart' as images;
 import 'package:logger/logger.dart';
 
 import '../ref_entities/epub_book_ref.dart';
@@ -13,7 +12,7 @@ import '../schema/opf/epub_metadata_meta.dart';
 class BookCoverReader {
   static final logger = Logger();
 
-  static Future<images.Image?> readBookCover(EpubBookRef bookRef) async {
+  static Future<Uint8List?> readBookCover(EpubBookRef bookRef) async {
     var metaItems = bookRef.Schema!.Package!.Metadata!.MetaItems;
     if (metaItems == null) return null;
     var coverMetaItem = metaItems.firstWhereOrNull(
@@ -63,10 +62,7 @@ class BookCoverReader {
 
     coverImageContentFileRef = bookRef.Content!.Images![coverManifestItem.Href];
     try {
-      var coverImageContent =
-          await coverImageContentFileRef!.readContentAsBytes();
-      var retval = images.decodeImage(Uint8List.fromList(coverImageContent));
-      return retval;
+      return await coverImageContentFileRef!.readContentAsBytes();
     } catch (e) {
       logger.e('Error reading cover image content: $e');
       return null;
